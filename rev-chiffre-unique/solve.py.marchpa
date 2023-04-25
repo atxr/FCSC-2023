@@ -1,0 +1,247 @@
+partial = [
+    -1, 0x00, 0x01, 0x03, 0x09, -1, -1, 0x05,
+    -1, 0x0a, -1, 0x02, 0x08, -1, -1, 0x0e,
+    -1, -1, 0x0d, -1, 0x0a, 0x06, -1, -1, 0x09, 0x04, -1, -1, -1, 0x03, -1, -1,
+    0x02, -1, 0x06, -1, 0x03, -1, -1, -1, 0x05, 0x0d, -1, 0x01, -1, 0x0b, 0x0a,
+    -1, 0x09, -1, 0x0b, -1, -1, 0x02, -1, -1, 0x06, 0x0c, -1, -1, 0x0f, -1, -1,
+    0x05, -1, -1, 0x04, 0x09, 0x0b, 0x0e, -1, -1, -1, -1, 0x02, 0x07, -1, 0x01,
+    -1, 0x0d, -1, -1, -1, -1, -1, -1, -1, -1, 0x04, -1, 0x09, 0x03, -1, -1, -1,
+    -1, -1, 0x0c, -1, -1, 0x0d, -1, 0x02, -1, 0x0f, -1, -1, -1, 0x00, 0x09,
+    0x07, 0x04, -1, -1, 0x07, 0x0f, -1, -1, -1, -1, -1, 0x01, 0x0d, -1, 0x06,
+    0x08, 0x05, -1, -1, 0x0d, 0x05, 0x0b, 0x0f, 0x03, -1, 0x02, -1, -1, -1, -1,
+    -1, -1, -1, 0x06,
+    0x07, 0x08, 0x03, -1, -1, 0x0a, 0x0e, -1, -1, 0x0f, -1, -1, -1, -1, -1, -1,
+    -1, 0x02, -1, 0x01, 0x04, -1, 0x0d, 0x06, -1, -1, -1, 0x0b, 0x05, -1, 0x00,
+    -1, -1, -1, -1, 0x06, 0x0c, 0x0b, -1, 0x00, -1, 0x02, -1, 0x05, -1, 0x07,
+    0x03, 0x08,  0x08, -1, -1, -1, 0x02, 0x00, -1, 0x01, 0x0c, -1, -1, 0x0d,
+    -1, -1, -1, 0x09, 0x0d, -1, -1, -1, -1, -1, 0x03, 0x0f, 0x0b, -1, -1, 0x04,
+    0x07, 0x00, 0x08, 0x0c, 0x0b, -1, -1, -1, -1, 0x09, 0x07, 0x0d, -1, 0x03,
+    -1, -1, -1, -1, -1, 0x01, -1, 0x0f, 0x00, 0x05, -1, -1, 0x0b, -1, -1, -1,
+    -1, -1, 0x0d, 0x0a, -1, -1
+]
+
+
+def sub1(a):
+    return [a[i*16:(i+1)*16] for i in range(16)]
+
+
+def sub2(a):
+    return [[a[i*16+j] for i in range(16)] for j in range(16)]
+
+
+def sub3(a):
+    res = True
+    for i in range(16):
+        v4 = i & 0xFFFFFFFC
+        v5 = (i & 3) << 2
+        for j in range(16):
+            v8 = v5 + (j & 3) + 16 * (v4 + (j >> 2))
+            for k in range(j+1, 16):
+                tmp = a[v5 + (k & 3) + 16 * (v4 + (k >> 2))]
+                if not (tmp == -1 or a[v8] == -1 or tmp != a[v8]):
+                    return False
+    return res
+
+
+def generate_sub_candidates(c0):
+    res = []
+    tmp = [c0]
+
+    while len(tmp) > 0:
+        newtmp = []
+        for c in tmp:
+            if -1 not in c and c not in res:
+                res.append(c)
+            else:
+                for i in range(16):
+                    if i not in c:
+                        for j in range(16):
+                            if c[j] == -1:
+                                copy_c = c[:]
+                                copy_c[j] = i
+                                newtmp.append(copy_c)
+
+        tmp = newtmp
+
+    return res
+
+
+def verify(a):
+    for i in range(len(a)):
+        if type(a[i]) == list:
+            a[i] = -1
+
+    l1 = sub1(a)
+    l2 = sub2(a)
+
+    for sub in l1+l2:
+        for i in range(len(sub)):
+            if sub[i] != -1 and sub[i] in sub[i+1:]:
+                return False
+
+    return sub3(a)
+
+
+def res_sub1(a):
+    subs = sub1(a)
+    for i in range(16):
+        for x in subs[i]:
+            if type(x) == int:
+                for j in range(16):
+                    if type(a[i*16 + j]) == list and x in a[i*16 + j]:
+                        a[i*16 + j].remove(x)
+
+    print(a[:16])
+    return clean(a)
+
+
+def res_sub2(a):
+    subs = sub2(a)
+    for i in range(16):
+        for x in subs[i]:
+            if type(x) == int:
+                for j in range(16):
+                    if type(a[i + j*16]) == list and x in a[i + j*16]:
+                        a[i + j*16].remove(x)
+
+    return clean(a)
+
+
+def res_sub3(a, i):
+    h1 = i & 0xfffffffc
+    h2 = (i & 3) << 2
+
+    def f(x):
+        return (((x >> 2) + h1) << 4) + (x & 3) + h2
+
+    for j in range(16):
+        for k in range(16):
+            lj = type(a[f(j)]) == list
+            lk = type(a[f(k)]) == list
+
+            if lj and not lk and a[f(k)] in a[f(j)]:
+                a[f(j)].remove(a[f(k)])
+
+            if lk and not lj and a[f(j)] in a[f(k)]:
+                a[f(k)].remove(a[f(j)])
+
+    return clean(a)
+
+
+def clean(a):
+    r = []
+    for x in a:
+        if type(x) == int:
+            r.append(x)
+
+        elif len(x) == 1:
+            r.append(x[0])
+
+        else:
+            r.append(x)
+
+    return r
+
+
+def ev(a):
+    r = 0
+    for x in a:
+        if type(x) == list:
+            r += 1
+    return r
+
+
+def help1(a):
+    subs = sub1(a)
+    for n in range(16):
+        s = subs[n]
+        t = [0] * 16
+        ids = [-1] * 16
+        for i in range(16):
+            x = s[i]
+            if type(x) == list:
+                for k in x:
+                    t[k] += 1
+                    ids[k] = i
+
+        for i in range(16):
+            if t[i] == 1:
+                a[n*16 + ids[i]] = i
+                print(f"HELP1 HERE: {i=} {ids[i]=} {t[i]=}")
+
+    return a
+
+
+def help2(a):
+    subs = sub2(a)
+    for n in range(16):
+        s = subs[n]
+        t = [0] * 16
+        ids = [-1] * 16
+        for i in range(16):
+            x = s[i]
+            if type(x) == list:
+                for k in x:
+                    t[k] += 1
+                    ids[k] = i
+
+        for i in range(16):
+            if t[i] == 1:
+                a[ids[i]*16 + n] = i
+                print(f"HELP2 HERE: {i=} {ids[i]=} {t[i]=}")
+
+    return a
+
+
+def get_candidates():
+    a = [x if x != -1 else list(range(0x10)) for x in partial]
+    for _ in range(20):
+        a = res_sub1(a)
+        a = res_sub2(a)
+        for i in range(16):
+            a = res_sub3(a, i)
+
+    a = help2(a[:])
+
+    def h(l, p):
+        r = []
+        for x in l:
+            if verify(x[:]):
+                r += aux(x, 1-p)
+        return r
+
+    def aux(l, p):
+        if p:
+            ids = [len(x) if type(x) == list else 0 for x in l]
+            m = max(ids)
+        else:
+            ids = [len(x) if type(x) == list else 16 for x in l]
+            m = min(ids)
+
+        if m == 0:
+            return [l]
+
+        i = ids.index(m)
+        if type(l[i]) == list:
+            if len(l[i]) == 1:
+                l[i] = l[i][0]
+
+            elif type(l[i]) == list:
+                nxt = [x if type(x) == int else x[:] for x in l]
+                nxt[i].pop(0)
+                return [l[:i] + [l[i][0]] + l[i+1:]] + aux(nxt, p)
+
+        return [l]
+
+    r = [a]
+    for i in range(256):
+        r = h(r, len(r) > 10000)
+        a = help1(a[:])
+        a = help2(a[:])
+
+        print(f"step {i}: {len(r)}")
+    return r
+
+
+print(get_candidates())
+print(''.join([hex(x) + " " for x in get_candidates()[0]]))

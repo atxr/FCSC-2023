@@ -1,0 +1,40 @@
+define init
+    set logging file /tmp/gdb.log
+    set logging overwrite on
+    b socket
+    print/u 14171339039947875846
+    r
+    finish
+    d br
+    b*0x555555557195
+    b*0x5555555571b9
+    c
+end
+
+define hook
+    set logging redirect on
+    set logging enabled on
+    x/50000i $rbx
+    set logging enabled off
+    set logging redirect off
+    shell ./rev.py
+    c
+    ni
+    b*0x555555557195
+    b*0x5555555571b9
+end
+
+init
+
+set $i = 0
+set $total = 4
+while($i<$total)
+    set $i = $i + 1
+    p $i
+    hook
+    c
+end
+
+hook
+b *0x55555555717e
+#c

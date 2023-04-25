@@ -1,0 +1,42 @@
+int64_t test1(int64_t arg1)  {
+    int64_t rax;
+    int64_t rdx_8;
+    rdx_8 = HIGHD((-0x7e1a385f7ac6b561 * ((arg1 ^ 0xe32abd8ee510e5b0) + 0x208d4bfc30fa998b)));
+    rax = LOWD((-0x7e1a385f7ac6b561 * ((arg1 ^ 0xe32abd8ee510e5b0) + 0x208d4bfc30fa998b)));
+    int64_t rax_1;
+    int64_t rdx;
+    rdx = HIGHD((0x70717b53945b0533 * ((RORQ(((-rax) + 0xc28f3f183ba05d), 0x34)) - -0x301d4459ab90d946)));
+    rax_1 = LOWD((0x70717b53945b0533 * ((RORQ(((-rax) + 0xc28f3f183ba05d), 0x34)) - -0x301d4459ab90d946)));
+    int64_t rax_2;
+    int64_t rdx_1;
+    rdx_1 = HIGHD((-0xe76d6d13715fbb9 * (ROLQ(((RORQ(((rax_1 + 2) ^ 0x83763502def4110e), 0x22)) - 0x28eeaaf50204f377), 0x15))));
+    rax_2 = LOWD((-0xe76d6d13715fbb9 * (ROLQ(((RORQ(((rax_1 + 2) ^ 0x83763502def4110e), 0x22)) - 0x28eeaaf50204f377), 0x15))));
+    int64_t rax_3;
+    int64_t rdx_2;
+    rdx_2 = HIGHD((-0x4210c4bcc7a81d17 * (rax_2 - -0x748706fb000d9c62)));
+    rax_3 = LOWD((-0x4210c4bcc7a81d17 * (rax_2 - -0x748706fb000d9c62)));
+    int64_t rax_4;
+    int64_t rdx_3;
+    rdx_3 = HIGHD((-0x6844f790dd0d434f * (-(ROLQ(((RORQ((-((((RORQ((-((-rax_3) + 1)), 2)) ^ 0x201826a9a4e513f3) ^ 0x60cd0371aebc755c) - -0x6ca56cc652fd38b2)), 0x2a)) + 0x530ce73ba46dcc81), 1)))));
+    rax_4 = LOWD((-0x6844f790dd0d434f * (-(ROLQ(((RORQ((-((((RORQ((-((-rax_3) + 1)), 2)) ^ 0x201826a9a4e513f3) ^ 0x60cd0371aebc755c) - -0x6ca56cc652fd38b2)), 0x2a)) + 0x530ce73ba46dcc81), 1)))));
+    int64_t rax_5;
+    int64_t rdx_4;
+    rdx_4 = HIGHD((0x112e7fe34821799d * ((-(-((-((RORQ((((rax_4 ^ 0x83a79da815bee394) + 0xf749d32cf04694d) ^ 0x7e9f6916bf02e6d3), 7)) + 1)) + 1))) - 0x1fd1bc12b7e6dd8c)));
+    rax_5 = LOWD((0x112e7fe34821799d * ((-(-((-((RORQ((((rax_4 ^ 0x83a79da815bee394) + 0xf749d32cf04694d) ^ 0x7e9f6916bf02e6d3), 7)) + 1)) + 1))) - 0x1fd1bc12b7e6dd8c)));
+    int64_t rax_6;
+    int64_t rdx_5;
+    rdx_5 = HIGHD((0x43ed814a5e004aa9 * (rax_5 + 0x2a15aed18fe41ed7)));
+    rax_6 = LOWD((0x43ed814a5e004aa9 * (rax_5 + 0x2a15aed18fe41ed7)));
+    int64_t rax_7;
+    int64_t rdx_6;
+    rdx_6 = HIGHD((-0x72e0fc0a3f6e39f5 * (rax_6 - 1)));
+    rax_7 = LOWD((-0x72e0fc0a3f6e39f5 * (rax_6 - 1)));
+    int64_t rax_8;
+    int64_t rdx_7;
+    rdx_7 = HIGHD((-0x753136faa69cb887 * ((RORQ(((rax_7 - -0x635f86a96045c266) ^ 0xa91ee3d67d08df61), 0x13)) - 1)));
+    rax_8 = LOWD((-0x753136faa69cb887 * ((RORQ(((rax_7 - -0x635f86a96045c266) ^ 0xa91ee3d67d08df61), 0x13)) - 1)));
+    int64_t rax_9 = (-0x23e7aba53669bb76 ^ ((RORQ(((-((RORQ(((((-((((-(ROLQ(((RORQ(((-((RORQ(rax_8, 0x11)) - 1)) - 0x2ea56b0ebe823585), 5)) + 0x7fcc3eace4eba8d1), 0x3e))) - -0x4c5698b156858997) ^ 0x972878f59896cb1c) - 0x44684873b593128a)) + 0x3896eb4aa778987a) ^ 0x483429977c450318) + 2), 0x1b)) + 1)) - 0x6dad8fcf4fa51900), 5)) ^ 0xa860153b86c8cae2));
+    return rax_9;
+}
+
+
