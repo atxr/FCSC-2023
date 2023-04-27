@@ -1,12 +1,9 @@
-from z3 import *
-import os
-import itertools
-import math
 from hashlib import sha512
-from sys import argv
 import qrcode
-from PIL import Image, ImageOps
-from pyzbar import pyzbar
+from PIL import Image
+from ctypes import *
+
+# from pyzbar import pyzbar
 import numpy as np
 import time
 
@@ -25,35 +22,35 @@ def get_concat_v(im1, im2):
     return dst
 
 
-def decode_xy():
-    imgx = Image.open("x.png")
-    imgxinv = Image.open("xinv.png")
-    imgy = Image.open("y.png")
+# def decode_xy():
+#     imgx = Image.open("x.png")
+#     imgxinv = Image.open("xinv.png")
+#     imgy = Image.open("y.png")
 
-    rdx = pyzbar.decode(imgx)[0].data
-    rdxinv = pyzbar.decode(imgxinv)[0].data
-    rdy = pyzbar.decode(imgy)[0].data
+#     rdx = pyzbar.decode(imgx)[0].data
+#     rdxinv = pyzbar.decode(imgxinv)[0].data
+#     rdy = pyzbar.decode(imgy)[0].data
 
-    def decode(rd):
-        d = []
-        c = -1
-        for i in range(len(rd)):
-            if rd[i] & 0xC0 == 0xC0:
-                c = (rd[i] << 6) & 0xFF
-            elif c != -1:
-                d.append(rd[i] & 0x3F ^ c)
-                c = -1
-            else:
-                d.append(rd[i])
+#     def decode(rd):
+#         d = []
+#         c = -1
+#         for i in range(len(rd)):
+#             if rd[i] & 0xC0 == 0xC0:
+#                 c = (rd[i] << 6) & 0xFF
+#             elif c != -1:
+#                 d.append(rd[i] & 0x3F ^ c)
+#                 c = -1
+#             else:
+#                 d.append(rd[i])
 
-        return bytes(d)
+#         return bytes(d)
 
-    dx = decode(rdx)
-    dx = decode(rdxinv)
-    dy = decode(rdy)
+#     dx = decode(rdx)
+#     dx = decode(rdxinv)
+#     dy = decode(rdy)
 
-    print(dx)
-    print(dy)
+#     print(dx)
+#     print(dy)
 
 
 def sub_mul(l1, l2, i, j, s):
@@ -70,8 +67,7 @@ def mul(l1, l2, n):
         for j in range(n):
             s = 0
             for k in range(n):
-                if l1[i * n + k] == 1 and l2[k * n + j] == 1:
-                    s = (s + 1) & 0xFF
+                s += (l1[i * n + k] * l2[k * n + j]) % 256
 
             r[i * 8 + j] = s
 
@@ -99,75 +95,138 @@ def sol(a1, a2, n, t=5):
     s.add(correctness)
 
 
-def main():
-    if len(argv) != 2:
-        print("Need username")
-        exit(1)
-
+def main(username):
     t0 = time.time()
 
-    hash = sha512(argv[1].encode()).digest()
+    hash = sha512(username.encode()).digest()
     hl = np.array(list(hash), dtype=c_uint8)
     hl = hl.reshape(8, 8)
     y = hl @ hl
     yv = y.reshape(1, 64)[0]
 
-    ix = qrcode.make(bytes(hash), box_size=2, border=1).get_image()
-    iy = qrcode.make(bytes(y), box_size=2, border=1).get_image()
+    ix = qrcode.make(bytes(hash), box_size=2, border=4).get_image()
+    iy = qrcode.make(bytes(y), box_size=2, border=4).get_image()
     n = ix.width
     N = n * n
 
     ix.save("x.png")
     iy.save("y.png")
 
-    ax = np.asmatrix(ix, "L")
-    ay = np.copy(np.asmatrix(iy, "L"))
+    ax = np.asmatrix(np.zeros((n, n), dtype=c_uint8))
+    ay = np.asmatrix(np.zeros((n, n), dtype=c_uint8))
+    for i in range(n):
+        for j in range(n):
+            ax[i, j] = ix.getpixel((i, j))
+            ay[i, j] = iy.getpixel((i, j))
+
     lx = ax.reshape(1, n * n).tolist()[0]
     ly = ay.reshape(1, n * n).tolist()[0]
 
-    m = 200
+    tmp = [0] * (n * n)
+    for i in range(n):
+        for j in range(n):
+            tmp[i * n + j] = (256 - lx[n * i + j]) & 0xFF
+    lx = tmp
+
+    def mat_equ(a, b):
+        for i in range(n):
+            for j in range(n):
+                if a[i, j] != b[i, j]:
+                    return False
+        return True
+
+    def get_last_nilp(m):
+        n = m.shape[0]
+        z = np.zeros((n, n))
+        t = np.copy(m)
+        for order in range(n):
+            tmp = t * m
+            if mat_equ(tmp, z):
+                print(f"nilp order {order=}")
+                break
+            t = tmp
+
+        return t
+
+    Xn = get_last_nilp(ax)
+    Yn = get_last_nilp(ay)
+
+    fin = np.asmatrix(np.eye(n * 4, dtype=c_uint8))
+    finv = np.asmatrix(np.eye(n * 4, dtype=c_uint8))
+
+    for i in range(n):
+        for j in range(n):
+            fin[i + 2 * n, j] = ax[i, j]
+            fin[i + 3 * n, j + n] = -ay[i, j]
+            finv[i + 2 * n, j] = -ax[i, j]
+            finv[i + 3 * n, j + n] = ay[i, j]
+
+            fin[i, j + 3 * n] = Xn[i, j]
+            fin[i + n, j + 3 * n] = -Yn[i, j]
+            finv[i, j + 3 * n] = -Xn[i, j]
+            finv[i + n, j + 3 * n] = Yn[i, j]
+
+    print(fin)
+    print("==================")
+    print(finv)
+
+    print(mat_equ(fin @ finv, np.eye(n * 2, dtype=c_uint8)))
+
+    Image.fromarray(fin).save("out/fin.png")
+    Image.fromarray(finv).save("out/finv.png")
+
+    return
+
     s = Solver()
-    X = [Int(f"x{i}_{j}") for j in range(n + m) for i in range(n + m)]
-    Y = [Int(f"y{i}_{j}") for j in range(n + m) for i in range(n + m)]
+    I = [Int(f"i{i}_{j}") for j in range(n) for i in range(n)]
 
     s.add(
-        [
-            And(X[i * n + j] == lx[i * n + j], Y[i * n + j] == ly[i * n + j])
-            for i in range(n)
-            for j in range(n)
-        ]
+        [And(I[i * n + j] < 256, I[i * n + j] >= 0) for i in range(n) for j in range(n)]
     )
-    s.add(
-        [Or(X[i * n + j] == 1, X[i * n + j] == 0) for j in range(n) for i in range(n)]
-    )
-    s.add(
-        [Or(Y[i * n + j] == 1, Y[i * n + j] == 0) for j in range(n) for i in range(n)]
-    )
-
-    Z = mul(X, Y, n + m)
-    s.add(
-        [
-            Z[i * n + j] == (1 if i == j else 0)
-            for i in range(n + m)
-            for j in range(n + m)
-        ]
-    )
+    Z = mul(lx, I, n)
+    s.add([Z[i * n + j] == (1 if i == j else 0) for i in range(n) for j in range(n)])
 
     print(s.check())
     if s.check() == sat:
         m = s.model()
-        x = np.array([X[i * n + j].evaluate() for j in range(n) for i in range(n)])
-        y = np.array([Y[i * n + j].evaluate() for j in range(n) for i in range(n)])
+        inv = np.array([I[i * n + j].evaluate() for j in range(n) for i in range(n)])
 
-        Image.fromarray(x).save("x.png")
-        Image.fromarray(y).save("y.png")
+        Image.fromarray(inv).save("invx.png")
 
     else:
         print("unsat")
 
     print("Time:")
-    print(str((time.time() - t0) / 60) + "min")
+    print(time.time() - t0)
 
 
-main()
-# decode_xy()
+from requests import *
+
+r = get("https://brachiosaure.france-cybersecurity-challenge.fr/").content.decode()
+x = r.find('<h4 class="text-warning">') + len('<h4 class="text-warning">')
+r = r[x:]
+x = r.find("</h4>")
+r = r[:x]
+
+main(r)
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+chrome_options = Options()
+chrome_options.add_experimental_option("detach", True)
+driver = webdriver.Chrome(
+    executable_path=".\\selenium\\chromedriver.exe", options=chrome_options
+)
+driver.maximize_window()
+
+driver.get("https://brachiosaure.france-cybersecurity-challenge.fr/")
+# to identify element
+username = driver.find_element("xpath", "//h4[@class='text-warning']")
+s = driver.find_element("id", "upload1")
+s.send_keys("C:\\Users\\Alexandre\\Desktop\\FCSC-2023\\rev-brachiosaure\\out\\fin.png")
+s = driver.find_element("id", "upload2")
+s.send_keys("C:\\Users\\Alexandre\\Desktop\\FCSC-2023\\rev-brachiosaure\\out\\finv.png")
+# file path specified with send_keys
+
+# LET THE USER CLICK :)
