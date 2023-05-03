@@ -2,7 +2,7 @@
 
 ## FCSC 2023 - Reverse
 
-![challenge description](images/chall.png)
+<img src="images/chall.png" alt="challenge description" height="400">
 
 ---
 
@@ -262,7 +262,7 @@ Again, we can refine the 4th condition:
 
 With our five conditions, we can reformulate our problem with the following one:
 
-![math problem](images/math1.png)
+<img src="images/math1.png" alt="math problem" height="300">
 
 At first sight, the problem looks hard because we need to conserve the validity of both qrcodes and ensure at the same time that the matrix product of both images is the identity in `Z/256Z`.
 
@@ -276,7 +276,9 @@ And then after one day of work, I found a very interesting property.
 It appears that all the qrcodes I was working on were nilpotent, ie none null matrix that becomes null after a given power.
 From this property (that I will explain mathematically after), I did manage to generate a valid M1 and M2 like this:
 
-![math resolution](images/math2.png)
+<img src="images/math2.png" alt="math solution" height="400">
+
+---
 
 The images M1 and M2 seems to be good candidates to validate the login for the binary!
 Indeed, if we try to decode them as qrcode, the only valid qrcode in M1 is in Q1, which is embed in the bottom left in H1.
