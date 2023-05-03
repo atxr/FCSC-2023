@@ -290,19 +290,20 @@ You may wonder why are these qrcode nilpotent? I figured out thanks to the help 
 Actually, each qrcode is encoded with a `box_size`, which represent the size of the boxes that will encode the information.
 The higher this size is, the better the pixel quality will be the qrcode.
 
-But having a `box_size = 2` (which is quite current for qrcode because 1 is too low for the decoder) means that each pixel will be duplicated:
+Therefore, the image will be composed of sub-matrices of size `box_size`, filled with either 0 or 255.
+In practice, I worked with `box_size = 2`, which is the minimum size to get a correct qrcode quality.
+Here is an example to illustrate my words:
 
 ```
-This qrcode with a box size of 2 would encode the data [1 1 ; 0 1]
-| 1  1  1  1 |
-| 1  1  1  1 |
-| 0  0  1  1 |
-| 0  0  1  1 |
+This qrcode with a box_size of 2 would encode the data [1 1 ; 0 1] as:
+| 255  255  255  255 |
+| 255  255  255  255 |
+|  0    0   255  255 |
+|  0    0   255  255 |
 ```
 
 With this, when performing a matrix multiplication of two qrcodes, we can ensure that the result will be a multiple of `box_size`!
-
-Hence,
+Indeed, each sub-multiplication of sub-matrices will give either 0 or `box_size`.
 
 ```
 Q x Q = box_size * R
@@ -312,7 +313,10 @@ Q^2 = 2 R
 Q^16 = 256 R^8 = 0   (modulo 256)
 ```
 
-In practice, Q^8 = 0 most of the time, but with this proof, we can ensure that at least Q^16 should be null.
+Hence, we can ensure that at least Q^16 must be null with a `size_box` of 2.
+In practice, we often have Q^8 = 0, and that's why I used 8 in the equation above.
+
+Also, by changing the box_size to 3, we notice that the qrcode matrices are not niloptent anymore!
 
 ### Resolution
 
