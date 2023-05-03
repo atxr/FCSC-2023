@@ -286,7 +286,33 @@ For M2, the only valid qrcode is Q2, inside -H1 in the bottom left also.
 
 ### More maths :)
 
-[TODO]
+You may wonder why are these qrcode nilpotent? I figured out thanks to the help of the FCSC discord at the end of the event.
+Actually, each qrcode is encoded with a `box_size`, which represent the size of the boxes that will encode the information.
+The higher this size is, the better the pixel quality will be the qrcode.
+
+But having a `box_size = 2` (which is quite current for qrcode because 1 is too low for the decoder) means that each pixel will be duplicated:
+
+```
+This qrcode with a box size of 2 would encode the data [1 1 ; 0 1]
+| 1  1  1  1 |
+| 1  1  1  1 |
+| 0  0  1  1 |
+| 0  0  1  1 |
+```
+
+With this, when performing a matrix multiplication of two qrcodes, we can ensure that the result will be a multiple of `box_size`!
+
+Hence,
+
+```
+Q x Q = box_size * R
+
+And with box_size = 2,
+Q^2 = 2 R
+Q^16 = 256 R^8 = 0   (modulo 256)
+```
+
+In practice, Q^8 = 0 most of the time, but with this proof, we can ensure that at least Q^16 should be null.
 
 ### Resolution
 
